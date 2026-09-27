@@ -29,7 +29,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out tap
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f65a5d5c7d5 # v6.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Verify archives and update formula
         shell: bash
