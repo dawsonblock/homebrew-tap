@@ -1,0 +1,120 @@
+name: Update formula
+on:
+  workflow_dispatch:
+    inputs:
+      formula:
+        description: Formula name to update
+        required: true
+        type: string
+      tag:
+        description: Immutable release tag (vX.Y.Z)
+        required: true
+        type: string
+      repository:
+        description: Release repository (owner/name)
+        required: true
+        type: string
+      assets:
+        description: JSON map of target to {name, sha256} for the canonical archives
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    name: update-${{ inputs.formula }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out tap
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f65a5d5c7d5 # v6.0.0
+
+      - name: Verify archives and update formula
+        shell: bash
+        env:
+          FORMULA: ${{ inputs.formula }}
+          TAG: ${{ inputs.tag }}
+          REPOSITORY: ${{ inputs.repository }}
+          ASSETS_JSON: ${{ inputs.assets }}
+        run: |
+          set -euo pipefail
+          [[ "$FORMULA" =~ ^[a-z][a-z0-9-]*$ ]]
+          [[ "$TAG" =~ ^v[0-9]+[.][0-9]+[.][0-9]+$ ]]
+          [[ "$REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
+          version=${TAG#v}
+
+          # Download and hash every named archive before touching the formula:
+          # the declared digests are verified against the published bytes.
+          declare -A sha
+          for target in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
+            name=$(jq -er --arg t "$target" '.[$t].name' <<<"$ASSETS_JSON")
+            expected=$(jq -er --arg t "$target" '.[$t].sha256' <<<"$ASSETS_JSON")
+            [[ "$name" == "crabbox_${version}_${target}.tar.gz" ]]
+            [[ "$expected" =~ ^[0-9a-f]{64}$ ]]
+            url="https://github.com/$REPOSITORY/releases/download/$TAG/$name"
+            curl --disable --fail --silent --show-error --location --retry 3 \
+              "$url" -o "$RUNNER_TEMP/$name"
+            actual=$(shasum -a 256 "$RUNNER_TEMP/$name" | awk '{print $1}')
+            [[ "$actual" == "$expected" ]] || {
+              echo "archive digest mismatch for $name: $actual != $expected" >&2
+              exit 1
+            }
+            sha[$target]=$actual
+          done
+
+          formula_file="Formula/$FORMULA.rb"
+          mkdir -p Formula
+          cat >"$formula_file.new" <<RUBY
+          class ${FORMULA^} < Formula
+            desc "Run tests and commands in disposable remote sandboxes"
+            homepage "https://github.com/$REPOSITORY"
+            version "$version"
+            license "MIT"
+
+            on_macos do
+              on_arm do
+                url "https://github.com/$REPOSITORY/releases/download/$TAG/crabbox_${version}_darwin_arm64.tar.gz"
+                sha256 "${sha[darwin_arm64]}"
+              end
+              on_intel do
+                url "https://github.com/$REPOSITORY/releases/download/$TAG/crabbox_${version}_darwin_amd64.tar.gz"
+                sha256 "${sha[darwin_amd64]}"
+              end
+            end
+
+            on_linux do
+              on_arm do
+                url "https://github.com/$REPOSITORY/releases/download/$TAG/crabbox_${version}_linux_arm64.tar.gz"
+                sha256 "${sha[linux_arm64]}"
+              end
+              on_intel do
+                url "https://github.com/$REPOSITORY/releases/download/$TAG/crabbox_${version}_linux_amd64.tar.gz"
+                sha256 "${sha[linux_amd64]}"
+              end
+            end
+
+            def install
+              bin.install "crabbox"
+              bin.install "crabbox-apple-vm-helper" if OS.mac? && Hardware::CPU.arm?
+            end
+
+            test do
+              assert_equal version.to_s, shell_output("#{bin}/crabbox --version").strip
+            end
+          end
+          RUBY
+          sed -i 's/^          //' "$formula_file.new"
+
+          if [[ -f "$formula_file" ]] && cmp -s "$formula_file" "$formula_file.new"; then
+            echo "Formula $FORMULA is already current for $TAG"
+            exit 0
+          fi
+          mv "$formula_file.new" "$formula_file"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$formula_file"
+          git commit -m "$FORMULA $version"
+          git push origin HEAD:main

@@ -1,11 +1,6 @@
-# crabedence-V1 Homebrew tap
+# homebrew-tap
 
-Formulae for [crabedence-V1](https://github.com/dawsonblock/crabedence-V1) (crabbox) releases.
-
-The `crabbox` formula is written by that repository's release pipeline and bound to
-the exact SHA-256 of the published release archive; it is not maintained by hand.
-
-Install:
+Homebrew tap for [Crabbox](https://github.com/dawsonblock/crabedence-V1).
 
 ```sh
 brew tap dawsonblock/tap
