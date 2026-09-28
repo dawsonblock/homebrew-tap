@@ -1,28 +1,28 @@
 class Crabbox < Formula
   desc "Run tests and commands in disposable remote sandboxes"
   homepage "https://github.com/dawsonblock/crabedence-V1"
-  version "0.53.0"
+  version "0.53.1"
   license "MIT"
 
   on_macos do
     on_arm do
-      url "https://github.com/dawsonblock/crabedence-V1/releases/download/v0.53.0/crabbox_0.53.0_darwin_arm64.tar.gz"
-      sha256 "5fea589597283e7228e15b99a435d52830cd3f7b491d2d172f96da910a8e7ec9"
+      url "https://github.com/dawsonblock/crabedence-V1/releases/download/v0.53.1/crabbox_0.53.1_darwin_arm64.tar.gz"
+      sha256 "8e9fb1a3efefe4f49efe28e812f12f636585ca0bf0cb98ce05ac9e333767f69f"
     end
     on_intel do
-      url "https://github.com/dawsonblock/crabedence-V1/releases/download/v0.53.0/crabbox_0.53.0_darwin_amd64.tar.gz"
-      sha256 "1be3f1e00fc4f96b1dc45ed97165901d2052fabc7b2fb1677dc7ae77f6bc71ad"
+      url "https://github.com/dawsonblock/crabedence-V1/releases/download/v0.53.1/crabbox_0.53.1_darwin_amd64.tar.gz"
+      sha256 "53fc651e006c54d729da520fc29546e577fdbe2f646ec9df9fd4dfaaef0521a5"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/dawsonblock/crabedence-V1/releases/download/v0.53.0/crabbox_0.53.0_linux_arm64.tar.gz"
-      sha256 "b4896c0bf90903739c3e4a34ca696ef6190f7ab57fe8658625271fdff60e87c6"
+      url "https://github.com/dawsonblock/crabedence-V1/releases/download/v0.53.1/crabbox_0.53.1_linux_arm64.tar.gz"
+      sha256 "39f41df2a48cc755d172b8a5c179719fff082af0157acac6ec547cbdeb0ebb5d"
     end
     on_intel do
-      url "https://github.com/dawsonblock/crabedence-V1/releases/download/v0.53.0/crabbox_0.53.0_linux_amd64.tar.gz"
-      sha256 "071a5163f1ba24be00c4a6d8dc4665ac9361c731eec62672dc60dde6c7664482"
+      url "https://github.com/dawsonblock/crabedence-V1/releases/download/v0.53.1/crabbox_0.53.1_linux_amd64.tar.gz"
+      sha256 "5638b781e0b89cd05228bf2f6a5e74db61f5109beb36706a8370ad44f21082f2"
     end
   end
 
